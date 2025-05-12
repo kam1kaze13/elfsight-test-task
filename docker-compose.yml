@@ -1,0 +1,73 @@
+services:
+  nginx:
+    build: ./nginx
+    container_name: elfsight-nginx
+    volumes:
+      - type: bind
+        source: ./backend/src
+        target: /app
+    ports:
+      - "${NGINX_HTTP_PORT}:80"
+      - "${NGINX_HTTPS_PORT}:443"
+    links:
+      - backend
+    working_dir: /app
+    depends_on:
+      - backend
+    restart: unless-stopped
+    command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        - INSTALL_XDEBUG=${INSTALL_XDEBUG}
+        - INSTALL_PHP_SPX=${INSTALL_PHP_SPX}
+    volumes:
+      - type: bind
+        source: ./backend/src
+        target: /app
+  mysql:
+    image: mysql:9.0.1-oraclelinux9
+    environment:
+      - MYSQL_ALLOW_EMPTY_PASSWORD=yes
+      - TZ=Europe/Moscow
+    ports:
+      - ${MYSQL_PORT:-3307}:3306
+    volumes:
+      - type: bind
+        source: ./database/init.sql
+        target: /docker-entrypoint-initdb.d/init.sql
+      - type: bind
+        source: ./volumes/mysql
+        target: /var/lib/mysql
+        bind:
+          create_host_path: true
+      - type: bind
+        source: ${MYSQL_CONFIG_PATH:-./database/config-file.cnf}
+        target: /etc/mysql/conf.d/config-file.cnf
+  rabbitmq:
+    build:
+      context: ./rabbitmq
+      dockerfile: Dockerfile
+      args:
+        RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-rabbitpass}
+    restart: always
+    ports:
+      - ${RABBITMQ_MANAGEMENT_PORT:-15672}:15672
+      - ${RABBITMQ_PORT:-5672}:5672
+    hostname: 'elfsight-rabbitmq'
+    volumes:
+      - type: bind
+        source: ./volumes/rabbitmq
+        target: /var/lib/rabbitmq
+        bind:
+          create_host_path: true
+  redis:
+    image: redis:7.4.0-alpine3.20
+    volumes:
+      - type: bind
+        bind:
+          create_host_path: true
+        source: ./volumes/redis
+        target: /data

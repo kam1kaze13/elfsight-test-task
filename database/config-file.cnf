@@ -1,0 +1,10 @@
+[mysqld]
+group_concat_max_len=65536
+binlog_expire_logs_seconds=86400
+
+max_allowed_packet          = 32M
+innodb_buffer_pool_size     = 256M
+
+max_connections             = 25
+
+max_binlog_size             = 10M

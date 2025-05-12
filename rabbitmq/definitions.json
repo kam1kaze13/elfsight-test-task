@@ -1,0 +1,79 @@
+{
+  "vhosts": [
+    {
+      "name": "/"
+    }
+  ],
+  "users": [
+    {
+      "name": "admin",
+      "password": "rabbitpass",
+      "tags": "administrator"
+    }
+  ],
+  "permissions": [
+    {
+      "user": "admin",
+      "vhost": "/",
+      "configure": ".*",
+      "write": ".*",
+      "read": ".*"
+    }
+  ],
+  "policies": [
+    {
+      "vhost": "/",
+      "name": "Dead letters",
+      "pattern": "^(?!.*(dlx))",
+      "apply-to": "queues",
+      "definition": {
+        "dead-letter-exchange": "dlx",
+        "dead-letter-routing-key": "dlx"
+      },
+      "priority": 0
+    }
+  ],
+  "exchanges": [
+    {
+      "name": "dlx",
+      "vhost": "/",
+      "type": "direct",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
+    },
+    {
+      "name": "dlx-router",
+      "vhost": "/",
+      "type": "headers",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
+    }
+  ],
+  "queues": [
+    {
+      "name": "dlx",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-dead-letter-exchange": "dlx-router",
+        "x-dead-letter-routing-key": "",
+        "x-message-ttl": 5000
+      }
+    }
+  ],
+  "bindings": [
+    {
+      "source": "dlx",
+      "vhost": "/",
+      "destination": "dlx",
+      "destination_type": "queue",
+      "routing_key": "dlx",
+      "arguments": {}
+    }
+  ]
+}
