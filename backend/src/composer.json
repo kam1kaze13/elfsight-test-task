@@ -25,9 +25,16 @@
         "symfony/runtime": "7.1.*",
         "symfony/serializer": "7.1.*",
         "symfony/validator": "7.1.*",
-        "symfony/yaml": "7.1.*"
+        "symfony/yaml": "7.1.*",
+        "symfony/http-client": "7.1.*",
+        "davmixcool/php-sentiment-analyzer": "*"
     },
     "require-dev": {
+        "phpunit/phpunit": "^9.5",
+        "symfony/browser-kit": "7.1.*",
+        "symfony/css-selector": "7.1.*",
+        "symfony/phpunit-bridge": "^7.2",
+        "doctrine/doctrine-fixtures-bundle": "*"
     },
     "config": {
         "allow-plugins": {
