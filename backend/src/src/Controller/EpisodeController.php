@@ -5,7 +5,6 @@ namespace App\Controller;
 use App\Entity\Episode;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 
 class EpisodeController
@@ -18,16 +17,21 @@ class EpisodeController
     {
         $episode = $entityManager->getRepository(Episode::class)->find($id);
         if (!$episode) {
-            throw new NotFoundHttpException('Episode not found');
+            return new JsonResponse(['error' => 'Episode not found'], 404);
         }
 
         $reviews = $episode->getReviews();
-        $sentimentScores = $reviews->isEmpty() ? [] : $reviews->map(fn($r) => $r->getSentimentScore())->toArray();
+        if ($reviews->isEmpty()) {
+            $avgSentimentScore = 0.0;
+        } else {
+            $sentimentScores = $reviews->map(fn($r) => $r->getSentimentScore())->toArray();
+            $avgSentimentScore = array_sum($sentimentScores) / count($sentimentScores);
+        }
 
         return new JsonResponse([
             'name' => $episode->getName(),
             'airDate' => $episode->getAirDate(),
-            'avgSentimentScore' => array_sum($sentimentScores) / count($sentimentScores),
+            'avgSentimentScore' => $avgSentimentScore,
             'reviews' => $reviews->map(fn($r) => $r->getText())->toArray(),
         ]);
     }

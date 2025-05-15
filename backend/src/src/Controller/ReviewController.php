@@ -8,8 +8,6 @@ use App\Service\SentimentAnalysisService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 
 class ReviewController
@@ -24,12 +22,12 @@ class ReviewController
     {
         $episode = $entityManager->getRepository(Episode::class)->find($episodeId);
         if (!$episode) {
-            throw new NotFoundHttpException('Episode not found');
+            return new JsonResponse(['error' => 'Episode not found'], 404);
         }
 
         $text = $request->getPayload()->get('text');
         if (!$text) {
-            throw new BadRequestHttpException('Text cannot be empty');
+            return new JsonResponse(['error' => 'Text cannot be empty'], 400);
         }
 
         $review = new Review();
@@ -40,8 +38,6 @@ class ReviewController
         $entityManager->persist($review);
         $entityManager->flush();
 
-        return new JsonResponse(
-            data: ['message' => 'Review submitted successfully']
-        );
+        return new JsonResponse(['message' => 'Review submitted successfully']);
     }
 }
